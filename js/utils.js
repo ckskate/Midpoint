@@ -14,9 +14,19 @@ function get_places_of_interest(platform, category, location, radius) {
     'cat' : category,
     'in' : locale
   };
-  explorer.request(params, {}, onResult,
+  return explorer.request(params, {}, onResult,
     log("Error on places-of-interest request")
   );
+}
+
+/** Returns the longitude and latitude coordinates for a string address. */
+function get_coordinates(platform, address) {
+  var geocoder = platform.getGeocodingService(),
+    params = {
+      searchText : address,
+      jsonattributes : 1
+    };
+  return geocoder.geocode(params, onSuccess, log("Error on geocoding request"));
 }
 
 /** Returns the midpoint of two locations. Assert that location has lat, lng. */
@@ -57,7 +67,7 @@ function route_pedestrian_map(platform, map, start, end) {
       waypoint0 : start,
       waypoint1 : end
     };
-  router.calculateRoute(params, onSuccess,
+  return router.calculateRoute(params, onSuccess,
     log("Error on map pedestrian route request.")
   );
 }
@@ -73,7 +83,7 @@ function route_drive_map(platform, map, start, end) {
       waypoint0 : start,
       waypoint1 : end
     };
-  router.calculateRoute(params, onSuccess,
+  return router.calculateRoute(params, onSuccess,
     log("Error on map driver route request.")
   );
 }
@@ -89,7 +99,7 @@ function route_public_transporation_map(platform, map, start, end) {
       waypoint0 : start,
       waypoint1 : end
     };
-  router.calculateRoute(params, onSuccess,
+  return router.calculateRoute(params, onSuccess,
     log("Error on map public-transportation route request.")
   );
 }
