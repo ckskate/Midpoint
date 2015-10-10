@@ -36,7 +36,7 @@ body {
   text-align: center;
 }
 
-.submit {
+.success {
   margin-top: 10px;
 }
 
@@ -58,4 +58,9 @@ label {
   color: white;
   font-weight: 200;
   font-size: 20px;
+}
+
+.mapContainer {
+  height: 480px;
+  width: 640px;
 }
