@@ -8,12 +8,12 @@
 
 /** Returns a list of popular places near the location based on the category. */
 function get_places_of_interest(platform, category, location, radius) {
-  var local = location.lat + "," + location.lng + ";r=" + radius;
+  var locale = location.lat + "," + location.lng + ";r=" + radius;
   var explorer = new H.places.Explore(platform.getPlacesService());
   var params = {
     'cat' : category,
-    'in'
-  }
+    'in' : locale
+  };
   explorer.request(params, {}, onResult,
     log("Error on places-of-interest request")
   );
@@ -35,11 +35,11 @@ function center_map(H, map, start, end) {
   var top_right = {
     lat1 : Math.max(start.lat, end.lat) + vertical_buffer,
     lng1 : Math.min(start.lng, end.lng) - horizontal_buffer
-  }
+  };
   var bottom_left = {
     lat2 : Math.min(start.lat, end.lat) - vertical_buffer,
     lng2 : Math.max(start.lng, end.lng) + horizontal_buffer
-  }
+  };
   var bounds = new H.geo.Rect(top_right.lat1, top_rightlng1,
                               bottom_left.lat2, bottom_left.lng2);
   map.setViewBounds(bounds);
