@@ -1,0 +1,13 @@
+*.pyc
+*.pyo
+__pycache__/
+.idea/
+.eclipse/
+server/database.db
+data
+server/scoutmaster.conf
+*~
+images/
+logs/
+.DS_Store
+*.out
