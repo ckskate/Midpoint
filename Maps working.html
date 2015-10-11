@@ -1,4 +1,43 @@
-//Initialize communication with the platform
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+  <link rel="stylesheet" type="text/css"
+    href="https://js.api.here.com/v3/3.0/mapsjs-ui.css" />
+  <script type="text/javascript" charset="UTF-8"
+    src="https://js.api.here.com/v3/3.0/mapsjs-core.js"></script>
+  <script type="text/javascript" charset="UTF-8"
+    src="https://js.api.here.com/v3/3.0/mapsjs-service.js"></script>
+  <script type="text/javascript" charset="UTF-8"
+    src="https://js.api.here.com/v3/3.0/mapsjs-ui.js"></script>
+  <script type="text/javascript" charset="UTF-8"
+    src="https://js.api.here.com/v3/3.0/mapsjs-mapevents.js"></script>
+
+    <script type="text/javascript" charset="UTF-8"
+      src="http://js.api.here.com/v3/3.0/mapsjs-places.js"></script>
+    <link rel="stylesheet" type="text/css" 
+      href="http://js.api.here.com/v3/3.0/mapsjs-ui.css" />
+
+</head>
+<body>
+  <div id="map" style="width: 100%; height: 400px; background: grey" />
+  <script  type="text/javascript" charset="UTF-8" >
+
+/**
+ * Moves the map to display over Berlin
+ *
+ * @param  {H.Map} map      A HERE Map instance within the application
+ */
+function moveMapToBerlin(map){
+  map.setCenter({lat:52.5159, lng:13.3777});
+  map.setZoom(14);
+}
+
+/**
+ * Boilerplate map initialization code starts below:
+ */
+
+//Step 1: initialize communication with the platform
 var platform = new H.service.Platform({
   app_id: 'rIiShqffvZj8EyDeOq15',
   app_code: 'Wnf__6rH5EoRKTr8WlHI7w',
@@ -7,13 +46,13 @@ var platform = new H.service.Platform({
 });
 var defaultLayers = platform.createDefaultLayers();
 
-      // Instantiate a map inside the DOM element with id map. The
-      // map center is in San Francisco, the zoom level is 10:
-      var map = new H.Map(document.getElementById('map'),
-        platform.createDefaultLayers().normal.map, {
-          center: {lat: 37.7942, lng: -122.4070},
-          zoom: 15
-        });
+//Step 2: initialize a map  - not specificing a location will give a whole world view.
+var map = new H.Map(document.getElementById('map'),
+  defaultLayers.normal.map, {
+    center: {lat: 37.7942, lng: -122.4070},
+    zoom: 15
+    });
+
 
       // Create a group object to hold map markers:
       var group = new H.map.Group();
@@ -31,9 +70,10 @@ var defaultLayers = platform.createDefaultLayers();
 
         // Define search parameters:
       var params = {
-      // Plain text search for places 
+      // Plain text search for places with the word "hotel"
+        // associated with them:
         'q': 'going-out', // we want to make this a variable
-      //  Search in the area specified
+      //  Search in the Chinatown district in San Francisco:
         'at': '37.7942,-122.4070'
       };
 
@@ -47,8 +87,6 @@ var defaultLayers = platform.createDefaultLayers();
         error = data;
       }
 
-
-////////adding places to the map
         // This function adds markers to the map, indicating each of
         // the located places:
       function addPlacesToMap(result) {
@@ -62,7 +100,6 @@ var defaultLayers = platform.createDefaultLayers();
         // Run a search request with parameters, headers (empty), and
         // callback functions:
       search.request(params, {}, onResult, onError);
-
 
 //Step 3: make the map interactive
 // MapEvents enables the event system
@@ -149,3 +186,8 @@ function route_public_transporation_map(platform, map, start, end) {
     log("Error on map public-transportation route request.")
   );
 }
+// Now use the map as required...
+
+    </script>
+  </body>
+</html>
