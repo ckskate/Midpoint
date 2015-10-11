@@ -60,20 +60,35 @@ label {
 }
 
 #mapContainer {
-  width: 50%;
-  height: 75vh;
-  margin-top: 45vh;
+  width: 60%;
+  height: 85vh;
+  margin-top: 2vh;
   float: right;
   margin-right: 5%;
 }
 
 #panelContainer {
-  width: 40%;
-  height: 75vh;
-  margin-top: 45vh;
+  width: 30%;
+  height: 85vh;
+  margin-top: 2vh;
   float: left;
-  background: #767A8A;
+  background: #2d6480;
   color: white;
   margin-left: 5%;
   position: absolute;
+  overflow: scroll;
+}
+
+#searchAgain {
+  margin-top: 37vh;
+  font-family: "Raleway";
+  font-weight: 500;
+}
+
+ul {
+  list-style-type: none;
+}
+
+li {
+  text-decoration: none;
 }

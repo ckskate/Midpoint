@@ -46,9 +46,11 @@ $(document).ready(function() {
     }
   });
 
-  $('#submit').click(function() {
-     $("body").css({"transform": "translate3d(0, 1000px, 0)"});
-  });
+  $('#searchAgain').click(function() {
+    $('body').css({"transform": "translate3d(0, 0, 0)", "-webkit-transition": "transform 1.5s", "-moz-transition": "transform 1.5s", "transition": "transform 1.5s"});
+    $('ul').remove();
+    map.clearContent();
+  })
 
   $("#navInfo").submit(function(e) {
     e.preventDefault();
@@ -91,11 +93,11 @@ function openBubble(position, text){
 }
 
 //Return the nearby locations in the desired category
-function placesNearby(center, category) {
+function placesNearby(center, category, radius) {
   var explore = new H.places.Explore(platform.getPlacesService());
   var params = {
     'cat': category,
-    'in': center + ";r=1000"
+    'in': center + ";r=" + radius.toString()
   };
   explore.request(params, {}, onResult, onError);
 }
@@ -103,6 +105,9 @@ function placesNearby(center, category) {
 //Called if the request to Places.Here goes through
 function onResult(result) {
   var places = result.results.items;
+  if (places.length === 0) {
+    placesNearby(meetingPointCoords, category, 15000);
+  }
   addPlacesToMap(places);
   addPlacesToPanel(places);
 }
@@ -132,7 +137,6 @@ function addPlacesToPanel(places){
     i;
   nodeOL.style.fontSize = 'small';
   nodeOL.style.marginLeft ='5%';
-  // nodeOL.style.marginRight ='5%';
 
   for (i = 0;  i < places.length; i += 1) {
     var li = document.createElement('li'),
@@ -140,7 +144,7 @@ function addPlacesToPanel(places){
       content =  '<strong style="font-size: large; color: white">' + places[i].title  + '</strong>';
       content += ' <span style="font-size:smaller; color: white">(' +  places[i].category.title + ')</span><br>';
       content +=  places[i].vicinity + '<br>';
-      content += '<strong style="color: white">distance:</strong>' +  places[i].distance + 'm<br>';
+      content += '<strong style="color: white">distance:</strong>' +  places[i].distance + 'm<hr />';
 
     divLabel.innerHTML = content;
     li.appendChild(divLabel);
@@ -240,7 +244,7 @@ function addRouteShapeToMap(route, meetingPoint){
   // And zoom to its bounding rectangle
   map.setViewBounds(polyline.getBounds(), true);
 
-  placesNearby(meetingPointCoords, category);
+  placesNearby(meetingPointCoords, category, 1000);
 }
 
 //Calculate fastest public tansit map
