@@ -15,6 +15,9 @@ var map;
 var behavior;
 var ui;
 var bubble;
+var meetingPoint;
+var startCoord;
+var destCoord;
 
 //The juicy stuff happens *slurp* *slurp*
 $(document).ready(function() {
@@ -91,9 +94,6 @@ function getPlacesOfInterest(category, location, radius) {
   return explorer.request(params, {}, onResult, onError);
 }
 
-
-var startCoord;
-var destCoord;
 /** Returns the location object for a string address. */
 function getLocation(address, id) {
   var geocoder = platform.getGeocodingService(),
@@ -114,6 +114,7 @@ function getLocation(address, id) {
 
     if (startCoord != null && destCoord != null) {
       centerMap(startCoord, destCoord);
+      routeDriveMap(startCoord, destCoord);
     }
   }
 
@@ -167,16 +168,62 @@ function routePedestrianMap(start, end) {
 function routeDriveMap(start, end) {
   var router = platform.getRoutingService()
     params = {
-      mode : 'shortest;car',
+      mode : 'fastest;car',
       representation : 'display',
       routeattributes : 'waypoints,summary,shape,legs',
       maneuverattributes : 'direction,action',
-      waypoint0 : start,
-      waypoint1 : end
+      waypoint0 : start.latitude.toString() + "," + start.longitude.toString(),
+      waypoint1 : end.latitude.toString() + "," + end.longitude.toString()
     };
-  return router.calculateRoute(params, onSuccess,
-    onError
-  );
+  router.calculateRoute(params, drawRoute, onError);
+}
+
+//Draw the route obtained by the routing on the map
+function drawRoute(result) {
+  var route = result.response.route[0];
+  var meetingPointCoords = result.response.route[0].shape[route.shape.length/2];
+  meetingPointCoords = meetingPointCoords.split(",");
+  meetingPoint = {latitude: meetingPointCoords[0], longitude: meetingPointCoords[1]};
+
+  if (route != null && meetingPoint != null) {
+      addRouteShapeToMap(route, meetingPoint);
+  }
+}
+
+//Logic for drawing the route to the map
+function addRouteShapeToMap(route, meetingPoint){
+  var strip = new H.geo.Strip(),
+    routeShape = route.shape,
+    polyline;
+
+  var svgMarkup = '<svg width="18" height="18" ' +
+    'xmlns="http://www.w3.org/2000/svg">' +
+    '<circle cx="8" cy="8" r="8" ' +
+    'fill="#1b468d" stroke="white" stroke-width="1"  />' +
+    '</svg>',
+    dotIcon = new H.map.Icon(svgMarkup, {anchor: {x:8, y:8}});
+
+  var marker = new H.map.Marker({
+    lat: meetingPoint.latitude,
+    lng: meetingPoint.longitude},
+    {icon: dotIcon});
+
+  routeShape.forEach(function(point) {
+    var parts = point.split(',');
+    strip.pushLatLngAlt(parts[0], parts[1]);
+  });
+
+  polyline = new H.map.Polyline(strip, {
+    style: {
+      lineWidth: 4,
+      strokeColor: 'rgba(0, 36, 73, 0.7)'
+    }
+  });
+  // Add the polyline to the map
+  map.addObject(polyline);
+  map.addObject(marker);
+  // And zoom to its bounding rectangle
+  map.setViewBounds(polyline.getBounds(), true);
 }
 
 /** Returns the fastest public transport route between start and end. */

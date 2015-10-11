@@ -3,6 +3,7 @@ body {
   width: 100%;
   background: url("../img/beautiful-night-sky-2.jpg");
   background-position: center;
+  background-size: cover;
 }
 
 .container {
