@@ -1,28 +1,46 @@
-// Utilities file for the Midpoint Application
+//Generic onError function to save some time
+function onError(error) {
+  console.log("Shit just broke, motherfucker!");
+}
 
-/** Returns a list of popular places near the location based on the category. */
-function get_places_of_interest(platform, category, location, radius) {
+
+/** Returns a list of places based on location and radius. */
+function getPlacesOfInterest(platform, category, location, radius) {
   var locale = location.lat + "," + location.lng + ";r=" + radius;
   var explorer = new H.places.Explore(platform.getPlacesService());
   var params = {
     'cat' : category,
     'in' : locale
   };
-  explorer.request(params, {}, onResult,
-    log("Error on places-of-interest request")
-  );
+  return explorer.request(params, {}, onResult, onError);
+}
+
+/** Returns the location object for a string address. */
+function getLocation(platform, address) {
+  var geocoder = platform.getGeocodingService(),
+    params = {
+      searchText : address,
+      jsonattributes : 1
+    };
+
+  function onSuccess(result) {
+    console.log(result.response.view[0].result);
+  }
+
+  geocoder.geocode(params, onSuccess, onError);
 }
 
 /** Returns the midpoint of two locations. Assert that location has lat, lng. */
-function get_midpoint(location1, location2) {
+function getMidpoint(location1, location2) {
   x = (location1.lat + location2.lat) / 2;
   y = (location2.lng + location2.lng) / 2;
   return {lat : x, lng : y};
 }
 
-/** Returns a map centered on the midpoint of start and end. */
-function center_map(H, map, start, end) {
-  midpoint = get_midpoint(start, end);
+/** Returns a map centered at the midpoint of start and end, given API object
+ *  and map. */
+function centerMap(H, map, start, end) {
+  midpoint = getMidpoint(start, end);
   map.setCenter(midpoint);
   var vertical_buffer = 0.025;
   var horizontal_buffer = 0.05;
@@ -40,8 +58,8 @@ function center_map(H, map, start, end) {
   return map;
 }
 
-/** Returns a map with a pedestrian route drawn from start to end. */
-function route_pedestrian_map(platform, map, start, end) {
+/** Returns the fastest pedestrian route between start and end. */
+function routePedestrianMap(platform, map, start, end) {
   var router = platform.getRoutingService()
     params = {
       mode : 'fastest;pedestrian',
@@ -51,13 +69,11 @@ function route_pedestrian_map(platform, map, start, end) {
       waypoint0 : start,
       waypoint1 : end
     };
-  router.calculateRoute(params, onSuccess,
-    log("Error on map pedestrian route request.")
-  );
+  return router.calculateRoute(params, onSuccess, onError);
 }
 
-/** Returns a map with a driver route drawn from start to end. */
-function route_drive_map(platform, map, start, end) {
+/** Returns the fastest driver route between start and end. */
+function routeDriveMap(platform, map, start, end) {
   var router = platform.getRoutingService()
     params = {
       mode : 'shortest;car',
@@ -67,13 +83,13 @@ function route_drive_map(platform, map, start, end) {
       waypoint0 : start,
       waypoint1 : end
     };
-  router.calculateRoute(params, onSuccess,
-    log("Error on map driver route request.")
+  return router.calculateRoute(params, onSuccess,
+    onError
   );
 }
 
-/** Returns a map with a public transportation route drawn from start to end. */
-function route_public_transporation_map(platform, map, start, end) {
+/** Returns the fastest public transport route between start and end. */
+function routePublicTransporationMap(platform, map, start, end) {
   var router = platform.getRoutingService()
     params = {
       mode : 'shortest;publicTransport',
@@ -83,7 +99,5 @@ function route_public_transporation_map(platform, map, start, end) {
       waypoint0 : start,
       waypoint1 : end
     };
-  router.calculateRoute(params, onSuccess,
-    log("Error on map public-transportation route request.")
-  );
+  return router.calculateRoute(params, onSuccess, onError);
 }

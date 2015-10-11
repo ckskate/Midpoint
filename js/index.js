@@ -1,7 +1,9 @@
 // Initialize the platform object:
 var platform = new H.service.Platform({
-  'app_id': 'rIiShqffvZj8EyDeOq15',
-  'app_code': 'Wnf__6rH5EoRKTr8WlHI7w'
+  app_id: 'rIiShqffvZj8EyDeOq15',
+  app_code: 'Wnf__6rH5EoRKTr8WlHI7w',
+  useCIT: true,
+  useHTTPS: true
 });
 
 var maptypes = platform.createDefaultLayers();
