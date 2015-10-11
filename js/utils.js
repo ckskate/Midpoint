@@ -5,62 +5,6 @@
  *  @author Patrick Lee
  */
 
-
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-  <link rel="stylesheet" type="text/css"
-    href="https://js.api.here.com/v3/3.0/mapsjs-ui.css" />
-  <script type="text/javascript" charset="UTF-8"
-    src="https://js.api.here.com/v3/3.0/mapsjs-core.js"></script>
-  <script type="text/javascript" charset="UTF-8"
-    src="https://js.api.here.com/v3/3.0/mapsjs-service.js"></script>
-  <script type="text/javascript" charset="UTF-8"
-    src="https://js.api.here.com/v3/3.0/mapsjs-ui.js"></script>
-  <script type="text/javascript" charset="UTF-8"
-    src="https://js.api.here.com/v3/3.0/mapsjs-mapevents.js"></script>
-
-</head>
-<body>
-  <div id="map" style="width: 100%; height: 400px; background: grey" />
-  <script  type="text/javascript" charset="UTF-8" >
-
-/**
- * Moves the map to display over Berlin
- *
- * @param  {H.Map} map      A HERE Map instance within the application
- */
-//function moveMapToBerlin(map){
-//  map.setCenter({lat:52.5159, lng:13.3777});
-  //map.setZoom(14);
-//}
-
-/**
- * Boilerplate map initialization code starts below:
- */
-
-//Step 1: initialize communication with the platform
-var platform = new H.service.Platform({
-  app_id: 'rIiShqffvZj8EyDeOq15',
-  app_code: 'Wnf__6rH5EoRKTr8WlHI7w',
-  useCIT: true,
-  useHTTPS: true
-});
-var defaultLayers = platform.createDefaultLayers();
-
-//Step 2: initialize a map  - not specificing a location will give a whole world view.
-var map = new H.Map(document.getElementById('map'),
-  defaultLayers.normal.map);
-
-//Step 3: make the map interactive
-// MapEvents enables the event system
-// Behavior implements default interactions for pan/zoom (also on mobile touch environments)
-var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
-
-// Create the default UI components
-var ui = H.ui.UI.createDefault(map, defaultLayers);
-
 /** Returns a list of places based on location and radius. */
 function get_places_of_interest(platform, category, location, radius) {
   var locale = location.lat + "," + location.lng + ";r=" + radius;
@@ -91,6 +35,8 @@ function get_midpoint(location1, location2) {
   return {lat : x, lng : y};
 }
 
+/** Returns a map centered at the midpoint of start and end, given API object
+ *  and map. */
 function center_map(H, map, start, end) {
   midpoint = get_midpoint(start, end);
   map.setCenter(midpoint);
@@ -109,6 +55,8 @@ function center_map(H, map, start, end) {
   map.setViewBounds(bounds);
   return map;
 }
+
+/** Returns the fastest pedestrian route between start and end. */
 function route_pedestrian_map(platform, map, start, end) {
   var router = platform.getRoutingService()
     params = {
@@ -123,6 +71,8 @@ function route_pedestrian_map(platform, map, start, end) {
     log("Error on map pedestrian route request.")
   );
 }
+
+/** Returns the fastest driver route between start and end. */
 function route_drive_map(platform, map, start, end) {
   var router = platform.getRoutingService()
     params = {
@@ -137,6 +87,8 @@ function route_drive_map(platform, map, start, end) {
     log("Error on map driver route request.")
   );
 }
+
+/** Returns the fastest public transport route between start and end. */
 function route_public_transporation_map(platform, map, start, end) {
   var router = platform.getRoutingService()
     params = {
@@ -151,7 +103,3 @@ function route_public_transporation_map(platform, map, start, end) {
     log("Error on map public-transportation route request.")
   );
 }
-// Now use the map as required...
-  </script>
-</body>
-</html>
