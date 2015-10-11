@@ -10,14 +10,19 @@ var platform = new H.service.Platform({
 });
 
 //Pull down the default map types from [here]
-var defaultLayers = platform.createDefaultLayers();
-var map;
-var behavior;
-var ui;
-var bubble;
-var meetingPoint;
-var startCoord;
-var destCoord;
+var defaultLayers = platform.createDefaultLayers(),
+  map,
+  panel,
+  behavior,
+  ui,
+  bubble,
+  meetingPoint,
+  meetingPointCoords,
+  startCoord,
+  destCoord,
+  address1,
+  address2,
+  category;
 
 //The juicy stuff happens *slurp* *slurp*
 $(document).ready(function() {
@@ -27,8 +32,9 @@ $(document).ready(function() {
     defaultLayers.normal.map,
     {
       zoom: 15,
-      center: { lng: -122.2728, lat: 37.8717 } //California, bitches
+      center: { lng: -122.2728, lat: 37.8717 } //Berkeley, bitches
   });
+  panel = document.getElementById('panelContainer');
   behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
   ui = H.ui.UI.createDefault(map, defaultLayers);
 
@@ -46,9 +52,11 @@ $(document).ready(function() {
 
   $("#navInfo").submit(function(e) {
     e.preventDefault();
-    var address1 = $("#add1").val();
-    var address2 = $("#add2").val();
-    var type1 = $("#type1").val();
+    address1 = $("#add1").val();
+    address2 = $("#add2").val();
+    category = $("#type1").val();
+    console.log(typeof category);
+    console.log(address1, address2, category);
     if (address1 == "" || address2 == "") {
       location.reload();
       alert("You must enter two valid addresses!");
@@ -56,8 +64,7 @@ $(document).ready(function() {
     }
     getLocation(address1, "start");
     getLocation(address2, "destination");
-    $("body").css({"transform": "translate3d(0, -75vh, 0)", "-webkit-transition": "transform 1.5s", "-moz-transition": "transform 1.5s", "transition": "transform 1.5s"});
-    console.log(address1, address2, type1);
+    $("body").css({"transform": "translate3d(0, -100vh, 0)", "-webkit-transition": "transform 1.5s", "-moz-transition": "transform 1.5s", "transition": "transform 1.5s"});
   });
 });
 
@@ -83,18 +90,66 @@ function openBubble(position, text){
   }
 }
 
-/** Returns a list of places based on location and radius. */
-function getPlacesOfInterest(category, location, radius) {
-  var locale = location.latitude + "," + location.longitude + ";r=" + radius;
-  var explorer = new H.places.Explore(platform.getPlacesService());
+//Return the nearby locations in the desired category
+function placesNearby(center, category) {
+  var explore = new H.places.Explore(platform.getPlacesService());
   var params = {
-    'cat' : category,
-    'in' : locale
+    'cat': category,
+    'in': center + ";r=1000"
   };
-  return explorer.request(params, {}, onResult, onError);
+  explore.request(params, {}, onResult, onError);
 }
 
-/** Returns the location object for a string address. */
+//Called if the request to Places.Here goes through
+function onResult(result) {
+  var places = result.results.items;
+  addPlacesToMap(places);
+  addPlacesToPanel(places);
+}
+
+function addPlacesToMap(places) {
+  var group = new  H.map.Group();
+  // add 'tap' event listener, that opens info bubble, to the group
+  group.addEventListener('tap', function (evt) {
+    map.setCenter(evt.target.getPosition());
+    openBubble(
+      evt.target.getPosition(), evt.target.content);
+  }, false);
+
+  group.addObjects(places.map(function (place) {
+    var marker = new H.map.Marker({lat: place.position[0], lng: place.position[1]})
+    marker.content = '<div style="font-size: 1em; font-weight: 200; color: white; text-align:center" ><h4 style="color:inherit; text-align:center">' + place.title +
+      '</h4><h5 style="color:inherit; text-align:center">' + place.category.title + '</h5>' + place.vicinity + '</div>';
+    return marker;
+  }));
+
+  map.addObject(group);
+  map.setViewBounds(group.getBounds());
+}
+
+function addPlacesToPanel(places){
+  var nodeOL = document.createElement('ul'),
+    i;
+  nodeOL.style.fontSize = 'small';
+  nodeOL.style.marginLeft ='5%';
+  // nodeOL.style.marginRight ='5%';
+
+  for (i = 0;  i < places.length; i += 1) {
+    var li = document.createElement('li'),
+      divLabel = document.createElement('div'),
+      content =  '<strong style="font-size: large; color: white">' + places[i].title  + '</strong>';
+      content += ' <span style="font-size:smaller; color: white">(' +  places[i].category.title + ')</span><br>';
+      content +=  places[i].vicinity + '<br>';
+      content += '<strong style="color: white">distance:</strong>' +  places[i].distance + 'm<br>';
+
+    divLabel.innerHTML = content;
+    li.appendChild(divLabel);
+    nodeOL.appendChild(li);
+  }
+  panel.appendChild(nodeOL);
+}
+
+//Convets the "raw dawg" address data into coordinates like fucking magic
 function getLocation(address, id) {
   var geocoder = platform.getGeocodingService(),
     params = {
@@ -103,68 +158,25 @@ function getLocation(address, id) {
       requestId: id
     };
 
-  function onSuccess(result) {
-    if (result.response.metaInfo.requestId === "start") {
-      startCoord = result.response.view[0].result[0].location.displayPosition;
-      console.log(startCoord);
-    } else if (result.response.metaInfo.requestId === "destination") {
-      destCoord = result.response.view[0].result[0].location.displayPosition;
-      console.log(destCoord);
-    }
+  geocoder.geocode(params, onSuccessLocation, onError);
+}
 
-    if (startCoord != null && destCoord != null) {
-      centerMap(startCoord, destCoord);
-      routeDriveMap(startCoord, destCoord);
-    }
+//Called if the request to the Geocoding Service goes through
+function onSuccessLocation(result) {
+  //check the request ids
+  if (result.response.metaInfo.requestId === "start") {
+    startCoord = result.response.view[0].result[0].location.displayPosition;
+  } else if (result.response.metaInfo.requestId === "destination") {
+    destCoord = result.response.view[0].result[0].location.displayPosition;
   }
 
-  geocoder.geocode(params, onSuccess, onError);
+  //if both requests went through, do the good shit
+  if (startCoord != null && destCoord != null) {
+    routeDriveMap(startCoord, destCoord);
+  }
 }
 
-/** Returns the midpoint of two locations. Assert that location has lat, lng. */
-function getMidpoint(location1, location2) {
-  console.log(location1.latitude);
-  x = (location1.latitude + location2.latitude) / 2;
-  y = (location2.longitude + location2.longitude) / 2;
-  console.log(x, y);
-  return {lat : x, lng : y};
-}
-
-/** Returns a map centered at the midpoint of start and end, given API object
- *  and map. */
-function centerMap(start, end) {
-  midpoint = getMidpoint(start, end);
-  map.setCenter(midpoint);
-  var vertical_buffer = 0.025;
-  var horizontal_buffer = 0.05;
-  var top_right = {
-    lat1 : Math.max(start.latitude, end.latitude) + vertical_buffer,
-    lng1 : Math.min(start.longitude, end.longitude) - horizontal_buffer
-  };
-  var bottom_left = {
-    lat2 : Math.min(start.latitude, end.latitude) - vertical_buffer,
-    lng2 : Math.max(start.longitude, end.longitude) + horizontal_buffer
-  };
-  var bounds = new H.geo.Rect(top_right.lat1, top_right.lng1,
-                              bottom_left.lat2, bottom_left.lng2);
-  map.setViewBounds(bounds);
-}
-
-/** Returns the fastest pedestrian route between start and end. */
-function routePedestrianMap(start, end) {
-  var router = platform.getRoutingService()
-    params = {
-      mode : 'fastest;pedestrian',
-      representation : 'display',
-      routeattributes : 'waypoints,summary,shape,legs',
-      maneuverattributes : 'direction,action',
-      waypoint0 : start,
-      waypoint1 : end
-    };
-  return router.calculateRoute(params, onSuccess, onError);
-}
-
-/** Returns the fastest driver route between start and end. */
+//Returns the fastest driver route between start and end
 function routeDriveMap(start, end) {
   var router = platform.getRoutingService()
     params = {
@@ -181,16 +193,19 @@ function routeDriveMap(start, end) {
 //Draw the route obtained by the routing on the map
 function drawRoute(result) {
   var route = result.response.route[0];
-  var meetingPointCoords = result.response.route[0].shape[route.shape.length/2];
-  meetingPointCoords = meetingPointCoords.split(",");
-  meetingPoint = {latitude: meetingPointCoords[0], longitude: meetingPointCoords[1]};
+  console.log(route);
+  meetingPointCoords = result.response.route[0].shape[Math.floor(route.shape.length/2)];
+  console.log(meetingPointCoords);
+  var meetingPointCoordsS = meetingPointCoords.split(",");
+  meetingPoint = {lat: meetingPointCoordsS[0], lng: meetingPointCoordsS[1]};
+  map.setCenter(meetingPoint);
 
   if (route != null && meetingPoint != null) {
       addRouteShapeToMap(route, meetingPoint);
   }
 }
 
-//Logic for drawing the route to the map
+//Logic for drawing the route and the midpoint on the map
 function addRouteShapeToMap(route, meetingPoint){
   var strip = new H.geo.Strip(),
     routeShape = route.shape,
@@ -199,13 +214,13 @@ function addRouteShapeToMap(route, meetingPoint){
   var svgMarkup = '<svg width="18" height="18" ' +
     'xmlns="http://www.w3.org/2000/svg">' +
     '<circle cx="8" cy="8" r="8" ' +
-    'fill="#1b468d" stroke="white" stroke-width="1"  />' +
+    'fill="#9C9DAB" stroke="white" stroke-width="1"  />' +
     '</svg>',
     dotIcon = new H.map.Icon(svgMarkup, {anchor: {x:8, y:8}});
 
   var marker = new H.map.Marker({
-    lat: meetingPoint.latitude,
-    lng: meetingPoint.longitude},
+    lat: meetingPoint.lat,
+    lng: meetingPoint.lng},
     {icon: dotIcon});
 
   routeShape.forEach(function(point) {
@@ -216,7 +231,7 @@ function addRouteShapeToMap(route, meetingPoint){
   polyline = new H.map.Polyline(strip, {
     style: {
       lineWidth: 4,
-      strokeColor: 'rgba(0, 36, 73, 0.7)'
+      strokeColor: '#33335D'
     }
   });
   // Add the polyline to the map
@@ -224,13 +239,29 @@ function addRouteShapeToMap(route, meetingPoint){
   map.addObject(marker);
   // And zoom to its bounding rectangle
   map.setViewBounds(polyline.getBounds(), true);
+
+  placesNearby(meetingPointCoords, category);
 }
 
-/** Returns the fastest public transport route between start and end. */
+//Calculate fastest public tansit map
 function routePublicTransporationMap(start, end) {
   var router = platform.getRoutingService()
     params = {
       mode : 'shortest;publicTransport',
+      representation : 'display',
+      routeattributes : 'waypoints,summary,shape,legs',
+      maneuverattributes : 'direction,action',
+      waypoint0 : start,
+      waypoint1 : end
+    };
+  return router.calculateRoute(params, onSuccess, onError);
+}
+
+//Calculate fastest walking route
+function routePedestrianMap(start, end) {
+  var router = platform.getRoutingService()
+    params = {
+      mode : 'fastest;pedestrian',
       representation : 'display',
       routeattributes : 'waypoints,summary,shape,legs',
       maneuverattributes : 'direction,action',

@@ -4,11 +4,9 @@ body {
   background: url("../img/beautiful-night-sky-2.jpg");
   background-position: center;
   background-size: cover;
-}
-
-.container {
-  height: 100vh;
-  width: 100%;
+  color: white;
+  font-family: "Raleway", sans-serif;
+  overflow: hidden;
 }
 
 .header {
@@ -48,10 +46,10 @@ form {
   padding-bottom: 10px;
 }
 
-button {
-  font-family: "Vollkorn", serif;
-  font-weight: 700;
-  font-size: 30px;
+input[type=submit] {
+  font-family: "Raleway", sans-serif;
+  font-weight: 500;
+  font-size: 3em;
 }
 
 label {
@@ -61,7 +59,21 @@ label {
   font-size: 20px;
 }
 
-.mapContainer {
-  height: 480px;
-  width: 640px;
+#mapContainer {
+  width: 50%;
+  height: 75vh;
+  margin-top: 45vh;
+  float: right;
+  margin-right: 5%;
+}
+
+#panelContainer {
+  width: 40%;
+  height: 75vh;
+  margin-top: 45vh;
+  float: left;
+  background: #767A8A;
+  color: white;
+  margin-left: 5%;
+  position: absolute;
 }
